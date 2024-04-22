@@ -1,6 +1,6 @@
 import glfw
 from OpenGL.GL import *
-import OpenGL.GL.shaders
+from shader import Shader
 import numpy as np
 import glm
 import math
@@ -40,83 +40,31 @@ def main():
     glfw.set_cursor_pos_callback(window, mouse_callback)
     glfw.set_scroll_callback(window, scroll_callback)
 
-
-    vertex_code = """
-        attribute vec3 position;
-                
-        uniform mat4 model;
-        uniform mat4 view;
-        uniform mat4 projection;        
-        
-        void main(){
-            gl_Position = projection * view * model * vec4(position,1.0);
-        }
-        """
-    fragment_code = """
-            uniform vec4 color;
-            void main(){
-                gl_FragColor = color;
-            }
-            """
-
-    program  = glCreateProgram()
-    vertex   = glCreateShader(GL_VERTEX_SHADER)
-    fragment = glCreateShader(GL_FRAGMENT_SHADER)
-
-    glShaderSource(vertex, vertex_code)
-    glShaderSource(fragment, fragment_code)
-
-    glCompileShader(vertex)
-    if not glGetShaderiv(vertex, GL_COMPILE_STATUS):
-        error = glGetShaderInfoLog(vertex).decode()
-        print(error)
-        raise RuntimeError("Erro de compilacao do Vertex Shader")
-
-    glCompileShader(fragment)
-    if not glGetShaderiv(fragment, GL_COMPILE_STATUS):
-        error = glGetShaderInfoLog(fragment).decode()
-        print(error)
-        raise RuntimeError("Erro de compilacao do Fragment Shader")
-
-
-    glAttachShader(program, vertex)
-    glAttachShader(program, fragment)
-
-
-    glLinkProgram(program)
-    if not glGetProgramiv(program, GL_LINK_STATUS):
-        print(glGetProgramInfoLog(program))
-        raise RuntimeError('Linking error')
-        
-    glUseProgram(program)
+    shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
 
     vertices = modelo.vertices
 
-    buffer = glGenBuffers(1)
-    glBindBuffer(GL_ARRAY_BUFFER, buffer)
+    VAO = glGenVertexArrays(1)
+    VBO = glGenBuffers(1)
 
-
-    glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_DYNAMIC_DRAW)
-    glBindBuffer(GL_ARRAY_BUFFER, buffer)
-
+    glBindVertexArray(VAO)
+    
+    glBindBuffer(GL_ARRAY_BUFFER, VBO)
+    glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
+    
 
     stride = vertices.strides[0]
     offset = ctypes.c_void_p(0)
 
-
-    loc = glGetAttribLocation(program, "position")
-    glEnableVertexAttribArray(loc)
-
-
-    glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
-
-
-    loc_color = glGetUniformLocation(program, "color")
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, offset)
+    glEnableVertexAttribArray(0); 
 
 
     glfw.show_window(window)
 
     glEnable(GL_DEPTH_TEST) ### importante para 3D
+
+    shader.use()
 
     while not glfw.window_should_close(window):
 
@@ -135,25 +83,19 @@ def main():
         identity = np.identity(4)
 
         mat_model = model()
-        loc_model = glGetUniformLocation(program, "model")
-        glUniformMatrix4fv(loc_model, 1, GL_FALSE, glm.value_ptr(mat_model))    
-        
         mat_view = view()
-        loc_view = glGetUniformLocation(program, "view")
-        glUniformMatrix4fv(loc_view, 1, GL_FALSE, glm.value_ptr(mat_view))
-
         mat_projection = projection()
-        loc_projection = glGetUniformLocation(program, "projection")
-        glUniformMatrix4fv(loc_projection, 1, GL_FALSE, glm.value_ptr(mat_projection))    
         
+        shader.setMat4("model", mat_model)
+        shader.setMat4("view", mat_view)
+        shader.setMat4("projection", mat_projection)
         
         # renderizando a cada três vértices (triangulos)
         gray = 0.0
         for i in range(0,len(vertices['position']),3):
             gray = i/(len(vertices))
-            glUniform4f(loc_color, gray, gray, gray, 1.0) ### definindo uma cor
+            shader.setVec4("color", glm.vec4(gray, gray, gray, 1.0))
             glDrawArrays(GL_TRIANGLES, i, 3)
-            
         
         glfw.swap_buffers(window)
 
