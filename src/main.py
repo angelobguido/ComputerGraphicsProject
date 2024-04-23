@@ -1,6 +1,8 @@
 import glfw
 from OpenGL.GL import *
 from shader import Shader
+from mesh import Mesh
+from model import Model
 import numpy as np
 import glm
 import math
@@ -42,23 +44,12 @@ def main():
 
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
 
-    vertices = modelo.vertices
+    tea_vertices = modelo.vertices
+    tea_mesh = Mesh(tea_vertices)
 
-    VAO = glGenVertexArrays(1)
-    VBO = glGenBuffers(1)
-
-    glBindVertexArray(VAO)
-    
-    glBindBuffer(GL_ARRAY_BUFFER, VBO)
-    glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
-    
-
-    stride = vertices.strides[0]
-    offset = ctypes.c_void_p(0)
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, offset)
-    glEnableVertexAttribArray(0); 
-
+    tea1 = Model(tea_mesh)
+    tea2 = Model(tea_mesh, glm.vec3(5,5,2), glm.vec3(0.5, 1, 0.75), 180,45,20)
+    tea3 = Model(tea_mesh, glm.vec3(-3,2,-2), glm.vec3(0.75, 0.75, 0.75), 0,0,180)
 
     glfw.show_window(window)
 
@@ -80,23 +71,18 @@ def main():
         
         #glPolygonMode(GL_FRONT_AND_BACK,GL_LINE)
         
-        identity = np.identity(4)
-
-        mat_model = model()
         mat_view = view()
         mat_projection = projection()
         
-        shader.setMat4("model", mat_model)
         shader.setMat4("view", mat_view)
         shader.setMat4("projection", mat_projection)
-        
-        # renderizando a cada três vértices (triangulos)
-        gray = 0.0
-        for i in range(0,len(vertices['position']),3):
-            gray = i/(len(vertices))
-            shader.setVec4("color", glm.vec4(gray, gray, gray, 1.0))
-            glDrawArrays(GL_TRIANGLES, i, 3)
-        
+
+        gray = 0.5
+        shader.setVec4("color", glm.vec4(gray, gray, gray, 1.0))
+        tea1.draw(shader)
+        tea2.draw(shader)
+        tea3.draw(shader)
+
         glfw.swap_buffers(window)
 
     glfw.terminate()
@@ -165,15 +151,6 @@ def scroll_callback(window, xoffset: float, yoffset: float) -> None:
         fov = 1.0
     if (fov > 45.0):
         fov = 45.0
-
-def model():
-    
-    matrix_transform = glm.mat4(1.0) # instanciando uma matriz identidade   
-    matrix_transform = glm.rotate(matrix_transform,math.radians(180),glm.vec3(0.0,0.0,1.0))
-    matrix_transform = glm.translate(matrix_transform,glm.vec3(0.0,0.5,-2))
-    matrix_transform = glm.scale(matrix_transform,glm.vec3(1,1,1))
-    return matrix_transform
-
 
 def view():
     global cameraPos, cameraFront
