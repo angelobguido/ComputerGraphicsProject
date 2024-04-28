@@ -52,9 +52,16 @@ def main():
     tea_mesh = Mesh(tea_vertices)
     iron_man_mesh = Mesh(wfr.vertices)
 
+
+    cobble = TextureReader("./models/blocos/cobblestone.png")
+    brick = TextureReader("./models/blocos/brick.png")
+    plank = TextureReader("./models/blocos/plank.png")
+
     monstro_tex = TextureReader("./models/monstro/monstro.jpg")
     monstro_mesh = Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(monstro_tex.textureID, 0)])
-    block1mesh = Mesh(WaveFrontReader("./models/blocos/monstro.obj").vertices)
+
+    bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base.obj").vertices, [(cobble.textureID, 0)])
+    bloco1mesh.textures = [(plank.textureID, 0)]
 
     tea1 = Model(tea_mesh)
     tea2 = Model(tea_mesh, glm.vec3(5,5,2), glm.vec3(0.5, 1, 0.75), 180,45,20)
@@ -63,6 +70,8 @@ def main():
 
     monstro = Model(monstro_mesh)
     monstro2 = Model(monstro_mesh, glm.vec3(5,5,2), glm.vec3(0.5, 1, 0.75), 180,45,20)
+    bloco1 = Model(bloco1mesh, scale = glm.vec3(0.5,0.5,0.5))
+    bloco2 = Model(bloco1mesh, scale = glm.vec3(0.5,0.5,0.5), position = glm.vec3(0,0,1))
 
     glfw.show_window(window)
 
@@ -97,9 +106,11 @@ def main():
 
         gray = 0.5
         shader.setVec4("color", glm.vec4(gray, gray, gray, 1.0))
-        tea1.draw(shader)
+        #tea1.draw(shader)
         #tea2.draw(shader)
         #tea3.draw(shader)
+        bloco1.draw(shader)
+        bloco2.draw(shader)
         iron_man.draw(shader)
         monstro.draw(shader)
         monstro2.draw(shader)

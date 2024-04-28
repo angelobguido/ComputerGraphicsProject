@@ -22,9 +22,9 @@ class Model:
 
         matrix_transform = glm.mat4(1.0) 
         
-        #pivot
-        matrix_transform = glm.translate(matrix_transform, self.pivot)
-
+        #position
+        matrix_transform = glm.translate(matrix_transform, self.position)
+        
         #rotations
         matrix_transform = glm.rotate(matrix_transform,glm.radians(self.rotation_x),glm.vec3(1,0,0))
         matrix_transform = glm.rotate(matrix_transform,glm.radians(self.rotation_y),glm.vec3(0,1,0))
@@ -33,7 +33,7 @@ class Model:
         #scale
         matrix_transform = glm.scale(matrix_transform, self.scale)
         
-        #position
-        matrix_transform = glm.translate(matrix_transform, self.position)
+        #pivot
+        matrix_transform = glm.translate(matrix_transform, self.pivot)
         
         return matrix_transform
