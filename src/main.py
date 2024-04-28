@@ -3,12 +3,15 @@ from OpenGL.GL import *
 from shader import Shader
 from mesh import Mesh
 from model import Model
+from block_grid import BlockGrid
 from utils.wave_front_reader import WaveFrontReader
 from utils.texture_reader import TextureReader
 import numpy as np
 import glm
 import math
 import modelo
+from utils.block_types import *
+
 
 altura = 1000
 largura = 1000
@@ -46,32 +49,38 @@ def main():
 
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
 
-    wfr = WaveFrontReader("./models/ironman.obj")
+    plank = TextureReader("./models/blocos/plank.png").textureID
+    brick = TextureReader("./models/blocos/brick.png").textureID
+    cobble = TextureReader("./models/blocos/cobblestone.png").textureID
 
-    tea_vertices = modelo.vertices
-    tea_mesh = Mesh(tea_vertices)
-    iron_man_mesh = Mesh(wfr.vertices)
+    block_tex_dict = {PLANK: plank, BRICK: brick, COBBLE: cobble}
+    block_arrange = np.array([
+        [  
+            [BRICK, BRICK, BRICK],
+            [BRICK, BRICK, BRICK],
+            [BRICK, BRICK, BRICK]
+        ],
+        [
+            
+            [COBBLE, COBBLE, BRICK],
+            [COBBLE, NONE, COBBLE],
+            [COBBLE, NONE, BRICK]
+        ],
+        [
+            [COBBLE, COBBLE, COBBLE],
+            [COBBLE, NONE, COBBLE],
+            [COBBLE, NONE, COBBLE]
+        ],
+        [
+            [PLANK, PLANK, PLANK],
+            [PLANK, PLANK, PLANK],
+            [PLANK, PLANK, PLANK]
+        ]
+    ])
 
+    bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base.obj").vertices)
 
-    cobble = TextureReader("./models/blocos/cobblestone.png")
-    brick = TextureReader("./models/blocos/brick.png")
-    plank = TextureReader("./models/blocos/plank.png")
-
-    monstro_tex = TextureReader("./models/monstro/monstro.jpg")
-    monstro_mesh = Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(monstro_tex.textureID, 0)])
-
-    bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base.obj").vertices, [(cobble.textureID, 0)])
-    bloco1mesh.textures = [(plank.textureID, 0)]
-
-    tea1 = Model(tea_mesh)
-    tea2 = Model(tea_mesh, glm.vec3(5,5,2), glm.vec3(0.5, 1, 0.75), 180,45,20)
-    tea3 = Model(tea_mesh, glm.vec3(-3,2,-2), glm.vec3(0.75, 0.75, 0.75), 0,0,180)
-    iron_man = Model(iron_man_mesh,glm.vec3(-3,2,-2), glm.vec3(0.01, 0.01, 0.01))
-
-    monstro = Model(monstro_mesh)
-    monstro2 = Model(monstro_mesh, glm.vec3(5,5,2), glm.vec3(0.5, 1, 0.75), 180,45,20)
-    bloco1 = Model(bloco1mesh, scale = glm.vec3(0.5,0.5,0.5))
-    bloco2 = Model(bloco1mesh, scale = glm.vec3(0.5,0.5,0.5), position = glm.vec3(0,0,1))
+    grid = BlockGrid(bloco1mesh, block_arrange, block_tex_dict)
 
     glfw.show_window(window)
 
@@ -104,17 +113,8 @@ def main():
         shader.setMat4("view", mat_view)
         shader.setMat4("projection", mat_projection)
 
-        gray = 0.5
-        shader.setVec4("color", glm.vec4(gray, gray, gray, 1.0))
-        #tea1.draw(shader)
-        #tea2.draw(shader)
-        #tea3.draw(shader)
-        bloco1.draw(shader)
-        bloco2.draw(shader)
-        iron_man.draw(shader)
-        monstro.draw(shader)
-        monstro2.draw(shader)
-
+        grid.draw(shader)
+        
         glfw.swap_buffers(window)
 
     glfw.terminate()
