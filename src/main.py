@@ -3,13 +3,15 @@ from OpenGL.GL import *
 from shader import Shader
 from mesh import Mesh
 from model import Model
+from utils.wave_front_reader import WaveFrontReader
+from utils.texture_reader import TextureReader
 import numpy as np
 import glm
 import math
 import modelo
 
-altura = 700
-largura = 700
+altura = 1000
+largura = 1000
 
 cameraPos    = glm.vec3(0.0,0.0,3)
 cameraFront = glm.vec3(0.0, 0.0, -1.0)
@@ -44,16 +46,32 @@ def main():
 
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
 
+    wfr = WaveFrontReader("./models/ironman.obj")
+
     tea_vertices = modelo.vertices
     tea_mesh = Mesh(tea_vertices)
+    iron_man_mesh = Mesh(wfr.vertices)
+
+    monstro_tex = TextureReader("./models/monstro/monstro.jpg")
+    monstro_mesh = Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(monstro_tex.textureID, 0)])
+    block1mesh = Mesh(WaveFrontReader("./models/blocos/monstro.obj").vertices)
 
     tea1 = Model(tea_mesh)
     tea2 = Model(tea_mesh, glm.vec3(5,5,2), glm.vec3(0.5, 1, 0.75), 180,45,20)
     tea3 = Model(tea_mesh, glm.vec3(-3,2,-2), glm.vec3(0.75, 0.75, 0.75), 0,0,180)
+    iron_man = Model(iron_man_mesh,glm.vec3(-3,2,-2), glm.vec3(0.01, 0.01, 0.01))
+
+    monstro = Model(monstro_mesh)
+    monstro2 = Model(monstro_mesh, glm.vec3(5,5,2), glm.vec3(0.5, 1, 0.75), 180,45,20)
 
     glfw.show_window(window)
 
     glEnable(GL_DEPTH_TEST) ### importante para 3D
+    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+    glEnable( GL_BLEND )
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA )
+    glEnable(GL_LINE_SMOOTH)
+    glEnable(GL_TEXTURE_2D)
 
     shader.use()
 
@@ -80,8 +98,11 @@ def main():
         gray = 0.5
         shader.setVec4("color", glm.vec4(gray, gray, gray, 1.0))
         tea1.draw(shader)
-        tea2.draw(shader)
-        tea3.draw(shader)
+        #tea2.draw(shader)
+        #tea3.draw(shader)
+        iron_man.draw(shader)
+        monstro.draw(shader)
+        monstro2.draw(shader)
 
         glfw.swap_buffers(window)
 
