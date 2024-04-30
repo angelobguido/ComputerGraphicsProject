@@ -19,7 +19,7 @@ largura = 1000
 cameraPos    = glm.vec3(0.0,0.0,3)
 cameraFront = glm.vec3(0.0, 0.0, -1.0)
 cameraUp     = glm.vec3(0.0, 1.0, 0.0)
-cameraSpeed = 0.3
+speedMultiplier = 50
 
 firstMouse = True
 yaw   = -90.0
@@ -47,13 +47,20 @@ def main():
     glfw.set_cursor_pos_callback(window, mouse_callback)
     glfw.set_scroll_callback(window, scroll_callback)
 
+    skyTex = TextureReader("./models/sky/sky.png").textureID
+    skyMesh = Mesh(WaveFrontReader("./models/sky/sky.obj").vertices, [(skyTex, 0)])
+    sky = Model(skyMesh)
+    sky2 = Model(skyMesh, scale=glm.vec3(1,-1,1))
+
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
 
     plank = TextureReader("./models/blocos/plank.png").textureID
     brick = TextureReader("./models/blocos/brick.png").textureID
     cobble = TextureReader("./models/blocos/cobblestone.png").textureID
+    leaves = TextureReader("./models/blocos/leaves.png").textureID
+    log = TextureReader("./models/blocos/log.png").textureID
 
-    block_tex_dict = {PLANK: plank, BRICK: brick, COBBLE: cobble}
+    block_tex_dict = {PLANK: plank, BRICK: brick, COBBLE: cobble, LEAVES: leaves, LOG: log}
     block_arrange = np.array([
         [  
             [BRICK, BRICK, BRICK],
@@ -67,9 +74,9 @@ def main():
             [COBBLE, NONE, BRICK]
         ],
         [
-            [COBBLE, COBBLE, COBBLE],
-            [COBBLE, NONE, COBBLE],
-            [COBBLE, NONE, COBBLE]
+            [LEAVES, LEAVES, LEAVES],
+            [LEAVES, NONE, LEAVES],
+            [LEAVES, NONE, LEAVES]
         ],
         [
             [PLANK, PLANK, PLANK],
@@ -78,9 +85,77 @@ def main():
         ]
     ])
 
-    bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base.obj").vertices)
+    floor_arrange = np.array([
+        [  
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE],
+            [COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE, COBBLE]
+        ]
+    ])
+
+    tree_arrange = np.array([
+        [  
+            [NONE, LEAVES, NONE],
+            [LEAVES, LEAVES, LEAVES],
+            [NONE, LEAVES, NONE]
+        ],
+        [
+            
+            [LEAVES, LEAVES, LEAVES],
+            [LEAVES, LOG, LEAVES],
+            [LEAVES, LEAVES, LEAVES]
+        ],
+        [
+            
+            [LEAVES, LEAVES, LEAVES],
+            [LEAVES, LOG, LEAVES],
+            [LEAVES, LEAVES, LEAVES]
+        ],
+        [
+            [NONE, NONE, NONE],
+            [NONE, LOG, NONE],
+            [NONE, NONE, NONE]
+        ],
+        [
+            [NONE, NONE, NONE],
+            [NONE, LOG, NONE],
+            [NONE, NONE, NONE]
+        ]
+    ])
+
+    bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base2.obj").vertices)
 
     grid = BlockGrid(bloco1mesh, block_arrange, block_tex_dict)
+    grid2 = BlockGrid(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(4,0,4))
+    grid3 = BlockGrid(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(10,0,4))
+    grid4 = BlockGrid(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(7,0,4))
+    floor = BlockGrid(bloco1mesh, floor_arrange, block_tex_dict, glm.vec3(10,-1,0))
+
+
 
     glfw.show_window(window)
 
@@ -90,6 +165,7 @@ def main():
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA )
     glEnable(GL_LINE_SMOOTH)
     glEnable(GL_TEXTURE_2D)
+    glEnable(GL_ALPHA_TEST)
 
     shader.use()
 
@@ -113,7 +189,14 @@ def main():
         shader.setMat4("view", mat_view)
         shader.setMat4("projection", mat_projection)
 
+        sky.draw(shader)
+        sky2.draw(shader)
         grid.draw(shader)
+        grid2.draw(shader)
+        grid3.draw(shader)
+        grid4.draw(shader)
+        floor.draw(shader)
+        
         
         glfw.swap_buffers(window)
 
@@ -128,7 +211,7 @@ def key_event(window,key,scancode,action,mods):
     if (glfw.get_key(window, glfw.KEY_ESCAPE) == glfw.PRESS):
         glfw.set_window_should_close(window, True)
 
-    cameraSpeed = 2.5 * deltaTime
+    cameraSpeed = speedMultiplier * deltaTime
 
     if (glfw.get_key(window, glfw.KEY_W) == glfw.PRESS):
         cameraPos += cameraSpeed * glm.normalize(cameraFront-cameraFront.y)

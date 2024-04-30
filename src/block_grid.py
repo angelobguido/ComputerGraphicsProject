@@ -10,10 +10,11 @@ SCALE = glm.vec3(0.5,0.5,0.5)
 STEP = 1
 
 class BlockGrid:
-    def __init__(self, blockMesh: Mesh, array: np.ndarray, blockDict: dict):
+    def __init__(self, blockMesh: Mesh, array: np.ndarray, blockDict: dict, position: glm.vec3 = glm.vec3(0,0,0)):
         self.blocks = {}
         self.blockMesh = blockMesh
         self.blockDict = blockDict
+        self.position = position
         
         self.setupBlocks(array)
 
@@ -28,7 +29,7 @@ class BlockGrid:
                 for k in range(P):
                     
                     if array[i,j,k] != NONE:
-                        newBlock = Model(self.blockMesh, position=glm.vec3(-j*STEP,-i*STEP,k*STEP), scale=SCALE)
+                        newBlock = Model(self.blockMesh, position=glm.vec3(-j*STEP+self.position.x,-i*STEP+M+self.position.y,k*STEP+self.position.z), scale=SCALE)
                     
                         if array[i,j,k] not in self.blocks:
                             self.blocks[array[i,j,k]] = []   
