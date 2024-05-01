@@ -3,7 +3,7 @@ from OpenGL.GL import *
 from shader import Shader
 from mesh import Mesh
 from model import Model
-from block_grid import BlockGrid
+from block_group import BlockGroup
 from utils.wave_front_reader import WaveFrontReader
 from utils.texture_reader import TextureReader
 import numpy as np
@@ -11,10 +11,11 @@ import glm
 import math
 import modelo
 from utils.block_types import *
+from block_arranges import *
 
 
-altura = 1000
-largura = 1000
+altura = 600
+largura = 800
 
 cameraPos    = glm.vec3(0.0,0.0,3)
 cameraFront = glm.vec3(0.0, 0.0, -1.0)
@@ -30,10 +31,13 @@ lastY =  600.0 / 2.0
 deltaTime = 0.0
 lastFrame = 0.0
 
+window = None
+fullscreen = False
+
 fov=45
 
 def main():
-    global deltaTime, lastFrame
+    global deltaTime, lastFrame, window
 
     glfw.init()
     glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
@@ -49,8 +53,10 @@ def main():
 
     skyTex = TextureReader("./models/sky/sky.png").textureID
     skyMesh = Mesh(WaveFrontReader("./models/sky/sky.obj").vertices, [(skyTex, 0)])
-    sky = Model(skyMesh)
-    sky2 = Model(skyMesh, scale=glm.vec3(1,-1,1))
+    monstroTex = TextureReader("./models/monstro/monstro.jpg").textureID
+    monstro = Model(Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(monstroTex,0)]), position=glm.vec3(5,0.5,0))
+    sky = Model(skyMesh, scale=glm.vec3(2,2,2))
+    sky2 = Model(skyMesh, scale=glm.vec3(2,-2,2))
 
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
 
@@ -60,103 +66,17 @@ def main():
     leaves = TextureReader("./models/blocos/leaves.png").textureID
     log = TextureReader("./models/blocos/log.png").textureID
     grass = TextureReader("./models/blocos/grass.png").textureID
+    glass = TextureReader("./models/blocos/glass.png").textureID
 
-    block_tex_dict = {PLANK: plank, BRICK: brick, COBBLE: cobble, LEAVES: leaves, LOG: log, GRASS: grass}
-    block_arrange = np.array([
-        [  
-            [BRICK, BRICK, BRICK],
-            [BRICK, BRICK, BRICK],
-            [BRICK, BRICK, BRICK]
-        ],
-        [
-            
-            [COBBLE, COBBLE, BRICK],
-            [COBBLE, NONE, COBBLE],
-            [COBBLE, NONE, BRICK]
-        ],
-        [
-            [LEAVES, LEAVES, LEAVES],
-            [LEAVES, NONE, LEAVES],
-            [LEAVES, NONE, LEAVES]
-        ],
-        [
-            [PLANK, PLANK, PLANK],
-            [PLANK, PLANK, PLANK],
-            [PLANK, PLANK, PLANK]
-        ]
-    ])
-
-    floor_arrange = np.array([
-        [  
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
-            [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS]
-        ]
-    ])
-
-    tree_arrange = np.array([
-        [  
-            [NONE, LEAVES, NONE],
-            [LEAVES, LEAVES, LEAVES],
-            [NONE, LEAVES, NONE]
-        ],
-        [
-            
-            [LEAVES, LEAVES, LEAVES],
-            [LEAVES, LOG, LEAVES],
-            [LEAVES, LEAVES, LEAVES]
-        ],
-        [
-            
-            [LEAVES, LEAVES, LEAVES],
-            [LEAVES, LOG, LEAVES],
-            [LEAVES, LEAVES, LEAVES]
-        ],
-        [
-            [NONE, NONE, NONE],
-            [NONE, LOG, NONE],
-            [NONE, NONE, NONE]
-        ],
-        [
-            [NONE, NONE, NONE],
-            [NONE, LOG, NONE],
-            [NONE, NONE, NONE]
-        ]
-    ])
-
+    block_tex_dict = {PLANK: plank, BRICK: brick, COBBLE: cobble, LEAVES: leaves, LOG: log, GRASS: grass, GLASS: glass}
+    
     bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base2.obj").vertices)
 
-    grid = BlockGrid(bloco1mesh, block_arrange, block_tex_dict)
-    grid2 = BlockGrid(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(4,0,4))
-    grid3 = BlockGrid(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(10,0,4))
-    grid4 = BlockGrid(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(7,0,4))
-    floor = BlockGrid(bloco1mesh, floor_arrange, block_tex_dict, glm.vec3(10,-1,0))
-
-
+    grid = BlockGroup(bloco1mesh, house_arrange, block_tex_dict)
+    grid2 = BlockGroup(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(4,0,4))
+    grid3 = BlockGroup(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(10,0,4))
+    grid4 = BlockGroup(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(7,0,4))
+    floor = BlockGroup(bloco1mesh, floor_arrange, block_tex_dict, glm.vec3(10,-1,0))
 
     glfw.show_window(window)
 
@@ -197,17 +117,22 @@ def main():
         grid3.draw(shader)
         grid4.draw(shader)
         floor.draw(shader)
+        monstro.draw(shader)
         
         
         glfw.swap_buffers(window)
 
     glfw.terminate()
 
-def framebuffer_size_callback(window, width: int, height: int) -> None:
+def framebuffer_size_callback(window, width: int, height: int):
+    global altura, largura
     glViewport(0, 0, width, height)
+    altura = height
+    largura = width
+
     
 def key_event(window,key,scancode,action,mods):
-    global fov, cameraPos, cameraFront
+    global fov, cameraPos, cameraFront, fullscreen
 
     if (glfw.get_key(window, glfw.KEY_ESCAPE) == glfw.PRESS):
         glfw.set_window_should_close(window, True)
@@ -226,6 +151,20 @@ def key_event(window,key,scancode,action,mods):
         cameraPos += glm.normalize(glm.vec3(0.0,1.0,0.0)) * cameraSpeed
     if (glfw.get_key(window, glfw.KEY_Q) == glfw.PRESS):
         cameraPos -= glm.normalize(glm.vec3(0.0,1.0,0.0)) * cameraSpeed
+
+    if key == glfw.KEY_F and action == glfw.PRESS:
+        # Toggle between fullscreen and windowed mode
+        if fullscreen == False:
+            # Switch to fullscreen mode
+            monitor = glfw.get_primary_monitor()
+            mode = glfw.get_video_mode(monitor)
+            glfw.set_window_monitor(window, monitor, 0, 0, mode.size.width, mode.size.height, mode.refresh_rate)
+            fullscreen = True
+        else:
+            # Switch to windowed mode
+            glfw.set_window_monitor(window, None, 100, 100, 800, 600, glfw.DONT_CARE)
+            fullscreen = False
+
 
 def mouse_callback(window, xpos: float, ypos: float) -> None:
     global cameraFront, lastX, lastY, firstMouse, yaw, pitch
@@ -277,7 +216,7 @@ def projection():
     global altura, largura, fov
     
     near = 0.1
-    far = 100
+    far = 200
     
     mat_projection = glm.perspective(glm.radians(fov), largura/altura, near, far)
     

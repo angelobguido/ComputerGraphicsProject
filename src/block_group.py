@@ -9,7 +9,7 @@ import glm
 SCALE = glm.vec3(0.5,0.5,0.5)
 STEP = 1
 
-class BlockGrid:
+class BlockGroup:
     def __init__(self, blockMesh: Mesh, array: np.ndarray, blockDict: dict, position: glm.vec3 = glm.vec3(0,0,0)):
         self.blocks = {}
         self.blockMesh = blockMesh
