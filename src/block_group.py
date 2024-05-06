@@ -9,38 +9,44 @@ import glm
 SCALE = glm.vec3(0.5,0.5,0.5)
 STEP = 1
 
-class BlockGroup:
-    def __init__(self, blockMesh: Mesh, array: np.ndarray, blockDict: dict, position: glm.vec3 = glm.vec3(0,0,0)):
-        self.blocks = {}
+class BlockGroupParams:
+    def __init__(self, blockMesh: Mesh, array: np.ndarray, blockDict: dict, pivot: glm.vec3 = glm.vec3(0,0,0)):
         self.blockMesh = blockMesh
         self.blockDict = blockDict
+        self.pivot = pivot
+        self.array = array
+
+class BlockGroup:
+    def __init__(self, params: BlockGroupParams, position: glm.vec3 = glm.vec3(0,0,0)):
+        self.blocks = {}
+        self.params = params
         self.position = position
         
-        self.setupBlocks(array)
+        self.setupBlocks()
 
-    def setupBlocks(self, array: np.ndarray):
+    def setupBlocks(self):
 
-        M = array.shape[0]
-        N = array.shape[1]
-        P = array.shape[2]
+        M = self.params.array.shape[0]
+        N = self.params.array.shape[1]
+        P = self.params.array.shape[2]
 
         for i in range(M):
             for j in range(N):
                 for k in range(P):
                     
-                    if array[i,j,k] != NONE:
-                        newBlock = Model(self.blockMesh, position=glm.vec3(-j*STEP+self.position.x,-i*STEP+M+self.position.y,k*STEP+self.position.z), scale=SCALE)
+                    if self.params.array[i,j,k] != NONE:
+                        newBlock = Model(self.params.blockMesh, position=glm.vec3((k+self.position.x-self.params.pivot.x)*STEP,(-i+M+self.position.y-self.params.pivot.y)*STEP,(j+self.position.z-self.params.pivot.z)*STEP), scale=SCALE)
                     
-                        if array[i,j,k] not in self.blocks:
-                            self.blocks[array[i,j,k]] = []   
+                        if self.params.array[i,j,k] not in self.blocks:
+                            self.blocks[self.params.array[i,j,k]] = []   
 
-                        self.blocks[array[i,j,k]].append(newBlock)
+                        self.blocks[self.params.array[i,j,k]].append(newBlock)
 
     def draw(self, shader):
 
         for key in self.blocks:
 
-            self.blockMesh.textures = [(self.blockDict[key],0)]
+            self.params.blockMesh.textures = [(self.params.blockDict[key],0)]
 
             for block in self.blocks[key]:
                 block.draw(shader)

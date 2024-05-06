@@ -3,7 +3,7 @@ from OpenGL.GL import *
 from shader import Shader
 from mesh import Mesh
 from model import Model
-from block_group import BlockGroup
+from block_group import BlockGroup, BlockGroupParams
 from utils.wave_front_reader import WaveFrontReader
 from utils.texture_reader import TextureReader
 import numpy as np
@@ -17,24 +17,27 @@ from block_arranges import *
 altura = 600
 largura = 800
 
-cameraPos    = glm.vec3(0.0,0.0,3)
+cameraPos    = glm.vec3(0.0,5,50)
 cameraFront = glm.vec3(0.0, 0.0, -1.0)
 cameraUp     = glm.vec3(0.0, 1.0, 0.0)
-speedMultiplier = 50
+speedMultiplier = 10
 
 firstMouse = True
 yaw   = -90.0
 pitch =  0.0
 lastX =  800.0 / 2.0
 lastY =  600.0 / 2.0
+fov=45
 
 deltaTime = 0.0
 lastFrame = 0.0
 
 window = None
 fullscreen = False
+key_states = {}
 
-fov=45
+polygon_mode = False
+
 
 def main():
     global deltaTime, lastFrame, window
@@ -54,7 +57,7 @@ def main():
     skyTex = TextureReader("./models/sky/sky.png").textureID
     skyMesh = Mesh(WaveFrontReader("./models/sky/sky.obj").vertices, [(skyTex, 0)])
     monstroTex = TextureReader("./models/monstro/monstro.jpg").textureID
-    monstro = Model(Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(monstroTex,0)]), position=glm.vec3(5,0.5,0))
+    monstro = Model(Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(monstroTex,0)]), position=glm.vec3(23,0.5,0))
     sky = Model(skyMesh, scale=glm.vec3(2,2,2))
     sky2 = Model(skyMesh, scale=glm.vec3(2,-2,2))
 
@@ -71,12 +74,18 @@ def main():
     block_tex_dict = {PLANK: plank, BRICK: brick, COBBLE: cobble, LEAVES: leaves, LOG: log, GRASS: grass, GLASS: glass}
     
     bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base2.obj").vertices)
+    # bloco1mesh = Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices)
 
-    grid = BlockGroup(bloco1mesh, house_arrange, block_tex_dict)
-    grid2 = BlockGroup(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(4,0,4))
-    grid3 = BlockGroup(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(10,0,4))
-    grid4 = BlockGroup(bloco1mesh, tree_arrange, block_tex_dict, glm.vec3(7,0,4))
-    floor = BlockGroup(bloco1mesh, floor_arrange, block_tex_dict, glm.vec3(10,-1,0))
+
+    tree = BlockGroupParams(bloco1mesh, tree_arrange, block_tex_dict, pivot=glm.vec3(1,0,1))
+    floor = BlockGroupParams(bloco1mesh, floor_arrange, block_tex_dict)
+    house = BlockGroupParams(bloco1mesh, house_arrange, block_tex_dict)
+
+    grid = BlockGroup(house)
+    grid2 = BlockGroup(tree, glm.vec3(10,0,4))
+    grid3 = BlockGroup(tree, glm.vec3(13,0,4))
+    grid4 = BlockGroup(tree, glm.vec3(16,0,4))
+    floor = BlockGroup(floor, glm.vec3(0,-1,0))
 
     glfw.show_window(window)
 
@@ -101,8 +110,6 @@ def main():
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
         glClearColor(1.0, 1.0, 1.0, 1.0)
-        
-        #glPolygonMode(GL_FRONT_AND_BACK,GL_LINE)
         
         mat_view = view()
         mat_projection = projection()
@@ -131,30 +138,47 @@ def framebuffer_size_callback(window, width: int, height: int):
     largura = width
 
     
-def key_event(window,key,scancode,action,mods):
-    global fov, cameraPos, cameraFront, fullscreen
+def key_event(window, key, scancode, action, mods):
+    global fov, cameraPos, cameraFront, fullscreen, key_states, polygon_mode
 
-    if (glfw.get_key(window, glfw.KEY_ESCAPE) == glfw.PRESS):
-        glfw.set_window_should_close(window, True)
+    if action == glfw.PRESS:
+        key_states[key] = True
+    elif action == glfw.RELEASE:
+        key_states[key] = False
 
     cameraSpeed = speedMultiplier * deltaTime
 
-    if (glfw.get_key(window, glfw.KEY_W) == glfw.PRESS):
+    if key_states.get(glfw.KEY_ESCAPE, False):
+        glfw.set_window_should_close(window, True)
+
+    if key_states.get(glfw.KEY_W, False):
         cameraPos += cameraSpeed * glm.normalize(cameraFront-cameraFront.y)
-    if (glfw.get_key(window, glfw.KEY_S) == glfw.PRESS):
+    if key_states.get(glfw.KEY_S, False):
         cameraPos -= cameraSpeed * glm.normalize(cameraFront-cameraFront.y)
-    if (glfw.get_key(window, glfw.KEY_A) == glfw.PRESS):
+    if key_states.get(glfw.KEY_A, False):
         cameraPos -= glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
-    if (glfw.get_key(window, glfw.KEY_D) == glfw.PRESS):
+    if key_states.get(glfw.KEY_D, False):
         cameraPos += glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
-    if (glfw.get_key(window, glfw.KEY_SPACE) == glfw.PRESS):
+    if key_states.get(glfw.KEY_SPACE, False):
         cameraPos += glm.normalize(glm.vec3(0.0,1.0,0.0)) * cameraSpeed
-    if (glfw.get_key(window, glfw.KEY_Q) == glfw.PRESS):
+    if key_states.get(glfw.KEY_Q, False):
         cameraPos -= glm.normalize(glm.vec3(0.0,1.0,0.0)) * cameraSpeed
+
+    if cameraPos.y < 1:
+        cameraPos.y = 1
+
+    if key == glfw.KEY_P and action == glfw.PRESS:
+        if not polygon_mode:
+            glPolygonMode(GL_FRONT_AND_BACK,GL_LINE)
+            polygon_mode = True
+        else:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            polygon_mode = False
+        
 
     if key == glfw.KEY_F and action == glfw.PRESS:
         # Toggle between fullscreen and windowed mode
-        if fullscreen == False:
+        if not fullscreen:
             # Switch to fullscreen mode
             monitor = glfw.get_primary_monitor()
             mode = glfw.get_video_mode(monitor)
