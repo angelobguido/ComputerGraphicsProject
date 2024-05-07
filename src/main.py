@@ -54,7 +54,7 @@ def main():
     glfw.set_cursor_pos_callback(window, mouse_callback)
     glfw.set_scroll_callback(window, scroll_callback)
 
-    skyTex = TextureReader("./models/sky/sky.png").textureID
+    skyTex = TextureReader("./models/sky/sky.png", False).textureID
     skyMesh = Mesh(WaveFrontReader("./models/sky/sky.obj").vertices, [(skyTex, 0)])
     monstroTex = TextureReader("./models/monstro/monstro.jpg").textureID
     monstro = Model(Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(monstroTex,0)]), position=glm.vec3(23,0.5,0))
@@ -111,7 +111,7 @@ def main():
         
         glClearColor(1.0, 1.0, 1.0, 1.0)
         
-        mat_view = view()
+        mat_view = sky_view()
         mat_projection = projection()
         
         shader.setMat4("view", mat_view)
@@ -119,6 +119,12 @@ def main():
 
         sky.draw(shader)
         sky2.draw(shader)
+
+        #glClear(GL_DEPTH_BUFFER_BIT)
+        
+        mat_view = view()
+        shader.setMat4("view", mat_view)
+        
         grid.draw(shader)
         grid2.draw(shader)
         grid3.draw(shader)
@@ -234,6 +240,11 @@ def scroll_callback(window, xoffset: float, yoffset: float) -> None:
 def view():
     global cameraPos, cameraFront
     mat_view = glm.lookAt(cameraPos, cameraPos+cameraFront, cameraUp)
+    return mat_view
+
+def sky_view():
+    global cameraFront
+    mat_view = glm.lookAt(glm.vec3(0,0,0), glm.vec3(0,0,0)+cameraFront, cameraUp)
     return mat_view
 
 def projection():
