@@ -3,7 +3,7 @@ O que guardar na memória?
 Shader de terreno:
 Qual é a face. 6 faces possíveis: 3 bits
 Qual é o vértice da face. 4 vértices possíveis: 3 bits
-Qual é a posição dentro do chunck de 32X32X32 blocos. de (0,0,0) até (31,31,31): 18 bits
+Qual é a posição dentro do chunck de 32X32X32 blocos. de (0,0,0) até (31,255,31): 18 bits
 Qual é o índice de textura dentro do atlas. No máximo 256 valores: 8 bits
 
 Total de 4 bytes por vértice.

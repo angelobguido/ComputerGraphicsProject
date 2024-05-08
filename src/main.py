@@ -12,6 +12,7 @@ import math
 import modelo
 from utils.block_types import *
 from block_arranges import *
+from chunk_builder import ChunkBuilder
 
 
 altura = 600
@@ -62,6 +63,7 @@ def main():
     sky2 = Model(skyMesh, scale=glm.vec3(2,-2,2))
 
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
+    block_shader = Shader("./shaders/block_vertex_shader.hlsl", "./shaders/block_fragment_shader.hlsl")
 
     plank = TextureReader("./models/blocos/plank.png").textureID
     brick = TextureReader("./models/blocos/brick.png").textureID
@@ -87,6 +89,10 @@ def main():
     grid4 = BlockGroup(tree, glm.vec3(16,0,4))
     floor = BlockGroup(floor, glm.vec3(0,-1,0))
 
+
+    chunk = ChunkBuilder()
+    chunk_model = Model(chunk)
+
     glfw.show_window(window)
 
     glEnable(GL_DEPTH_TEST) ### importante para 3D
@@ -96,8 +102,6 @@ def main():
     glEnable(GL_LINE_SMOOTH)
     glEnable(GL_TEXTURE_2D)
     glEnable(GL_ALPHA_TEST)
-
-    shader.use()
 
     while not glfw.window_should_close(window):
 
@@ -114,24 +118,19 @@ def main():
         mat_view = sky_view()
         mat_projection = projection()
         
+        shader.use()
         shader.setMat4("view", mat_view)
         shader.setMat4("projection", mat_projection)
 
         sky.draw(shader)
         sky2.draw(shader)
 
-        #glClear(GL_DEPTH_BUFFER_BIT)
-        
+        block_shader.use()
         mat_view = view()
-        shader.setMat4("view", mat_view)
+        block_shader.setMat4("view", mat_view)
+        block_shader.setMat4("projection", mat_projection)        
         
-        grid.draw(shader)
-        grid2.draw(shader)
-        grid3.draw(shader)
-        grid4.draw(shader)
-        floor.draw(shader)
-        monstro.draw(shader)
-        
+        chunk_model.draw(block_shader)
         
         glfw.swap_buffers(window)
 

@@ -4,7 +4,7 @@ from mesh import Mesh
 import glm
 
 class Model:
-    def __init__(self, mesh: Mesh, position: glm.vec3 = glm.vec3(0,0,0), scale: glm.vec3 = glm.vec3(1,1,1), rotation_x = 0, rotation_y = 0, rotation_z = 0, pivot: glm.vec3 = glm.vec3(0,0,0)):
+    def __init__(self, mesh, position: glm.vec3 = glm.vec3(0,0,0), scale: glm.vec3 = glm.vec3(1,1,1), rotation_x = 0, rotation_y = 0, rotation_z = 0, pivot: glm.vec3 = glm.vec3(0,0,0)):
         self.mesh = mesh
         self.position = position
         self.scale = scale
