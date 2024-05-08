@@ -5,22 +5,21 @@ STRIDE = 4
 OFFSET_POSITION = ctypes.c_void_p(0)
 
 class ChunkBuilder:
-    def __init__(self):
+    def __init__(self, atlas):
         self.setupMesh()
+        self.atlas = atlas
 
     def setupMesh(self):
 
         vertices = []
 
-        for i in range(1):
-            for j in range(1):
-                for k in range(1):
+        for i in range(16):
+            for j in range(30):
+                for k in range(16):
                     for face in range(6):
                         for vertex in [0,1,2,1,2,3]:
 
-                            print(vertex)
-                            
-                            info = 0
+                            info = (i*j)%10
                             info = (face<<(32-3))|info
                             info = (vertex<<(32-6))|info
                             info = (i<<(32-11))|info
@@ -49,8 +48,9 @@ class ChunkBuilder:
         glBindVertexArray(0)
 
     def draw(self):
+
         glBindVertexArray(self.VAO)
-
+        glBindTexture(GL_TEXTURE_2D, self.atlas)
         glDrawArrays(GL_TRIANGLES, 0, self.num_vertices)
-
+        glBindTexture(GL_TEXTURE_2D, 0)
         glBindVertexArray(0)

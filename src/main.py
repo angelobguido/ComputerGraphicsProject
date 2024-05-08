@@ -73,6 +73,8 @@ def main():
     grass = TextureReader("./models/blocos/grass.png").textureID
     glass = TextureReader("./models/blocos/glass.png").textureID
 
+    atlas = TextureReader("./textures/atlas.png").textureID
+    
     block_tex_dict = {PLANK: plank, BRICK: brick, COBBLE: cobble, LEAVES: leaves, LOG: log, GRASS: grass, GLASS: glass}
     
     bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base2.obj").vertices)
@@ -90,7 +92,7 @@ def main():
     floor = BlockGroup(floor, glm.vec3(0,-1,0))
 
 
-    chunk = ChunkBuilder()
+    chunk = ChunkBuilder(atlas)
     chunk_model = Model(chunk)
 
     glfw.show_window(window)
