@@ -50,6 +50,12 @@ class Shader:
     def setVec4(self, name: str, vec: glm.vec4) -> None:
         glUniform4fv(glGetUniformLocation(self.ID, name), 1, glm.value_ptr(vec))
     
+    def setVec3(self, name: str, vec: glm.vec3) -> None:
+        glUniform3fv(glGetUniformLocation(self.ID, name), 1, glm.value_ptr(vec))
+
+    def setFloat(self, name: str, value) -> None:
+        glUniform1f(glGetUniformLocation(self.ID, name), value)
+
     def setMat4(self, name: str, mat: glm.mat4) -> None:
         glUniformMatrix4fv(glGetUniformLocation(self.ID, name), 1, GL_FALSE, glm.value_ptr(mat))
 

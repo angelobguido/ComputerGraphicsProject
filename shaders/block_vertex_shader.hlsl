@@ -45,7 +45,18 @@ const vec2[4] vertex_texture_position = {
     vec2(16/float(width),1-16/float(height))
 }; 
 
+const vec3[6] normals = {
+    vec3(0,1,0),
+    vec3(0,-1,0),
+    vec3(0,0,1),
+    vec3(0,0,-1),
+    vec3(1,0,0),
+    vec3(-1,0,0)
+}; 
+
 out vec2 TexCoord;
+out vec3 Normal;
+out vec3 FragPos;
 
 void main(){
 
@@ -63,6 +74,8 @@ void main(){
     vec3 position = vec3(position_x,position_y,position_z);
 
     TexCoord = vertex_texture_position[vertex] + vec2((texture_index%width)*16/float(width), (texture_index/width)*16/float(height));
+    Normal = normals[face];
 
     gl_Position = projection * view * model * vec4(position,1.0);
+    FragPos = vec3(model * vec4(position,1.0));
 }

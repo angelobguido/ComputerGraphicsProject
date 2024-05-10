@@ -13,15 +13,16 @@ import modelo
 from utils.block_types import *
 from block_arranges import *
 from chunk_builder import ChunkBuilder
+from terrain.world import World
 
 
 altura = 600
 largura = 800
 
-cameraPos    = glm.vec3(0.0,5,50)
+cameraPos    = glm.vec3(0.0,100,50)
 cameraFront = glm.vec3(0.0, 0.0, -1.0)
 cameraUp     = glm.vec3(0.0, 1.0, 0.0)
-speedMultiplier = 10
+speedMultiplier = 100
 
 firstMouse = True
 yaw   = -90.0
@@ -57,43 +58,28 @@ def main():
 
     skyTex = TextureReader("./models/sky/sky.png", False).textureID
     skyMesh = Mesh(WaveFrontReader("./models/sky/sky.obj").vertices, [(skyTex, 0)])
-    monstroTex = TextureReader("./models/monstro/monstro.jpg").textureID
-    monstro = Model(Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(monstroTex,0)]), position=glm.vec3(23,0.5,0))
     sky = Model(skyMesh, scale=glm.vec3(2,2,2))
     sky2 = Model(skyMesh, scale=glm.vec3(2,-2,2))
 
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
     block_shader = Shader("./shaders/block_vertex_shader.hlsl", "./shaders/block_fragment_shader.hlsl")
-
-    plank = TextureReader("./models/blocos/plank.png").textureID
-    brick = TextureReader("./models/blocos/brick.png").textureID
-    cobble = TextureReader("./models/blocos/cobblestone.png").textureID
-    leaves = TextureReader("./models/blocos/leaves.png").textureID
-    log = TextureReader("./models/blocos/log.png").textureID
-    grass = TextureReader("./models/blocos/grass.png").textureID
-    glass = TextureReader("./models/blocos/glass.png").textureID
+    block_shader.use()
+    block_shader.setFloat("ambientStrength", 0.4)
+    block_shader.setVec3("lightColor", glm.vec3(1,1,1))
+    block_shader.setVec3("lightPos", glm.vec3(100, 500, 100))
 
     atlas = TextureReader("./textures/atlas.png").textureID
+
+    world = World(100)
     
-    block_tex_dict = {PLANK: plank, BRICK: brick, COBBLE: cobble, LEAVES: leaves, LOG: log, GRASS: grass, GLASS: glass}
-    
-    bloco1mesh = Mesh(WaveFrontReader("./models/blocos/base2.obj").vertices)
-    # bloco1mesh = Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices)
+    world_chunks = []
 
+    for i in range(5):
+        for j in range(5):
+            chunk_mesh = ChunkBuilder(atlas, world, (i,j))
+            chunk_model = Model(chunk_mesh, position=glm.vec3(i*32,0,j*32))
+            world_chunks.append(chunk_model)
 
-    tree = BlockGroupParams(bloco1mesh, tree_arrange, block_tex_dict, pivot=glm.vec3(1,0,1))
-    floor = BlockGroupParams(bloco1mesh, floor_arrange, block_tex_dict)
-    house = BlockGroupParams(bloco1mesh, house_arrange, block_tex_dict)
-
-    grid = BlockGroup(house)
-    grid2 = BlockGroup(tree, glm.vec3(10,0,4))
-    grid3 = BlockGroup(tree, glm.vec3(13,0,4))
-    grid4 = BlockGroup(tree, glm.vec3(16,0,4))
-    floor = BlockGroup(floor, glm.vec3(0,-1,0))
-
-
-    chunk = ChunkBuilder(atlas)
-    chunk_model = Model(chunk)
 
     glfw.show_window(window)
 
@@ -126,13 +112,16 @@ def main():
 
         sky.draw(shader)
         sky2.draw(shader)
+        
+        glClear(GL_DEPTH_BUFFER_BIT)
 
         block_shader.use()
         mat_view = view()
         block_shader.setMat4("view", mat_view)
         block_shader.setMat4("projection", mat_projection)        
         
-        chunk_model.draw(block_shader)
+        for chunk in world_chunks:
+            chunk.draw(block_shader)
         
         glfw.swap_buffers(window)
 
@@ -252,7 +241,7 @@ def projection():
     global altura, largura, fov
     
     near = 0.1
-    far = 200
+    far = 1000
     
     mat_projection = glm.perspective(glm.radians(fov), largura/altura, near, far)
     
