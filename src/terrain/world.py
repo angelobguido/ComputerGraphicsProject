@@ -6,31 +6,37 @@ from perlin_noise import PerlinNoise
 class World:
 
     def __init__(self, seed = 0):
-        self.noise = PerlinNoise(octaves=0.2,seed=32)
-        self.dict = {}
+        self.noise = PerlinNoise(octaves=0.2,seed=seed)
+        self.noiseValues = {}
+        self.blocks = {}
 
     def get_block(self,position):
         x,y,z = position
 
+        if (x,y,z) in self.blocks:
+            return self.blocks[(x,y,z)]
+
         noiseValue = 0
 
-        if (x,z) in self.dict:
-            noiseValue = self.dict[(x,z)]
+        if (x,z) in self.noiseValues:
+            noiseValue = self.noiseValues[(x,z)]
         else:
             noiseValue = self.noise.noise((float(x/32), float(z/32)))
-            self.dict[(x,z)] = noiseValue
+            self.noiseValues[(x,z)] = noiseValue
 
         #print(noiseValue)
 
-        noiseValue = int((noiseValue+1)/2*255)
+        noiseValue = int((noiseValue+1)/2*128)
 
 
         if y == noiseValue:
-            return GRASS
+            self.blocks[(x,y,z)] = GRASS
         elif y < noiseValue and y > noiseValue - 10:
-            return DIRT
+            self.blocks[(x,y,z)] = DIRT
         elif y <= noiseValue - 10:
-            return COBBLE
+            self.blocks[(x,y,z)] = COBBLE
         else:
-            return NONE
+            self.blocks[(x,y,z)] = NONE
+
+        return self.blocks[(x,y,z)]
 

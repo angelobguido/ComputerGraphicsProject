@@ -1,0 +1,6 @@
+UP = 0
+DOWN = 1
+FORWARD = 2
+BACK = 3
+RIGHT = 4
+LEFT = 5

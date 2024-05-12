@@ -13,24 +13,17 @@ import modelo
 from utils.block_types import *
 from block_arranges import *
 from chunk_builder import ChunkBuilder
+from chunk_manager import ChunkManager
 from terrain.world import World
+from player import Player
+from utils.player_directions import *
 
+HEIGHT = 600
+WIDTH = 800
 
-altura = 600
-largura = 800
-
-cameraPos    = glm.vec3(0.0,100,50)
-cameraFront = glm.vec3(0.0, 0.0, -1.0)
-cameraUp     = glm.vec3(0.0, 1.0, 0.0)
-speedMultiplier = 100
-
-firstMouse = True
-yaw   = -90.0
-pitch =  0.0
-lastX =  800.0 / 2.0
-lastY =  600.0 / 2.0
-fov=45
-
+WORLD = World(50)
+PLAYER = Player(WIDTH, HEIGHT, WORLD)
+    
 deltaTime = 0.0
 lastFrame = 0.0
 
@@ -40,13 +33,12 @@ key_states = {}
 
 polygon_mode = False
 
-
 def main():
     global deltaTime, lastFrame, window
 
     glfw.init()
     glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
-    window = glfw.create_window(largura, altura, "Câmeras - Matriz Projection", None, None)
+    window = glfw.create_window(WIDTH, HEIGHT, "Câmeras - Matriz Projection", None, None)
     glfw.set_input_mode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
 
 
@@ -68,17 +60,15 @@ def main():
     block_shader.setVec3("lightColor", glm.vec3(1,1,1))
     block_shader.setVec3("lightPos", glm.vec3(100, 500, 100))
 
-    atlas = TextureReader("./textures/atlas.png").textureID
+    atlas = TextureReader("./textures/atlas.png", mipmap_paths=[
+        "./textures/atlas0.png",
+        "./textures/atlas1.png",
+        "./textures/atlas2.png",
+        "./textures/atlas3.png",
+        "./textures/atlas4.png"
+    ]).textureID
 
-    world = World(100)
-    
-    world_chunks = []
-
-    for i in range(5):
-        for j in range(5):
-            chunk_mesh = ChunkBuilder(atlas, world, (i,j))
-            chunk_model = Model(chunk_mesh, position=glm.vec3(i*32,0,j*32))
-            world_chunks.append(chunk_model)
+    chunk_manager = ChunkManager(WORLD, PLAYER, atlas)
 
 
     glfw.show_window(window)
@@ -90,6 +80,7 @@ def main():
     glEnable(GL_LINE_SMOOTH)
     glEnable(GL_TEXTURE_2D)
     glEnable(GL_ALPHA_TEST)
+
 
     while not glfw.window_should_close(window):
 
@@ -103,8 +94,8 @@ def main():
         
         glClearColor(1.0, 1.0, 1.0, 1.0)
         
-        mat_view = sky_view()
-        mat_projection = projection()
+        mat_view = PLAYER.getSkyView()
+        mat_projection = PLAYER.getProjection()
         
         shader.use()
         shader.setMat4("view", mat_view)
@@ -116,52 +107,43 @@ def main():
         glClear(GL_DEPTH_BUFFER_BIT)
 
         block_shader.use()
-        mat_view = view()
+        mat_view = PLAYER.getView()
         block_shader.setMat4("view", mat_view)
         block_shader.setMat4("projection", mat_projection)        
         
-        for chunk in world_chunks:
-            chunk.draw(block_shader)
-        
+        chunk_manager.draw(block_shader)
+
         glfw.swap_buffers(window)
 
     glfw.terminate()
 
 def framebuffer_size_callback(window, width: int, height: int):
-    global altura, largura
     glViewport(0, 0, width, height)
-    altura = height
-    largura = width
-
+    PLAYER.updateDimensions(width,height)
     
 def key_event(window, key, scancode, action, mods):
-    global fov, cameraPos, cameraFront, fullscreen, key_states, polygon_mode
+    global fullscreen, key_states, polygon_mode
 
     if action == glfw.PRESS:
         key_states[key] = True
     elif action == glfw.RELEASE:
         key_states[key] = False
 
-    cameraSpeed = speedMultiplier * deltaTime
-
     if key_states.get(glfw.KEY_ESCAPE, False):
         glfw.set_window_should_close(window, True)
 
     if key_states.get(glfw.KEY_W, False):
-        cameraPos += cameraSpeed * glm.normalize(cameraFront-cameraFront.y)
+        PLAYER.move(deltaTime, FORWARD)
     if key_states.get(glfw.KEY_S, False):
-        cameraPos -= cameraSpeed * glm.normalize(cameraFront-cameraFront.y)
+        PLAYER.move(deltaTime, BACK)
     if key_states.get(glfw.KEY_A, False):
-        cameraPos -= glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
+        PLAYER.move(deltaTime, LEFT)
     if key_states.get(glfw.KEY_D, False):
-        cameraPos += glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
+        PLAYER.move(deltaTime, RIGHT)
     if key_states.get(glfw.KEY_SPACE, False):
-        cameraPos += glm.normalize(glm.vec3(0.0,1.0,0.0)) * cameraSpeed
+        PLAYER.move(deltaTime, UP)
     if key_states.get(glfw.KEY_Q, False):
-        cameraPos -= glm.normalize(glm.vec3(0.0,1.0,0.0)) * cameraSpeed
-
-    if cameraPos.y < 1:
-        cameraPos.y = 1
+        PLAYER.move(deltaTime, DOWN)
 
     if key == glfw.KEY_P and action == glfw.PRESS:
         if not polygon_mode:
@@ -182,70 +164,15 @@ def key_event(window, key, scancode, action, mods):
             fullscreen = True
         else:
             # Switch to windowed mode
-            glfw.set_window_monitor(window, None, 100, 100, 800, 600, glfw.DONT_CARE)
+            glfw.set_window_monitor(window, None, 100, 100, WIDTH, HEIGHT, glfw.DONT_CARE)
             fullscreen = False
 
 
 def mouse_callback(window, xpos: float, ypos: float) -> None:
-    global cameraFront, lastX, lastY, firstMouse, yaw, pitch
-
-    if (firstMouse):
-
-        lastX = xpos
-        lastY = ypos
-        firstMouse = False
-
-    xoffset = xpos - lastX
-    yoffset = lastY - ypos 
-    lastX = xpos
-    lastY = ypos
-
-    sensitivity = 0.1 
-    xoffset *= sensitivity
-    yoffset *= sensitivity
-
-    yaw += xoffset
-    pitch += yoffset
-
-    if (pitch > 89.0):
-        pitch = 89.0
-    if (pitch < -89.0):
-        pitch = -89.0
-
-    front = glm.vec3()
-    front.x = glm.cos(glm.radians(yaw)) * glm.cos(glm.radians(pitch))
-    front.y = glm.sin(glm.radians(pitch))
-    front.z = glm.sin(glm.radians(yaw)) * glm.cos(glm.radians(pitch))
-    cameraFront = glm.normalize(front)
+    PLAYER.look(xpos,ypos)
 
 def scroll_callback(window, xoffset: float, yoffset: float) -> None:
-    global fov
-    
-    fov -= yoffset
-    if (fov < 1.0):
-        fov = 1.0
-    if (fov > 45.0):
-        fov = 45.0
-
-def view():
-    global cameraPos, cameraFront
-    mat_view = glm.lookAt(cameraPos, cameraPos+cameraFront, cameraUp)
-    return mat_view
-
-def sky_view():
-    global cameraFront
-    mat_view = glm.lookAt(glm.vec3(0,0,0), glm.vec3(0,0,0)+cameraFront, cameraUp)
-    return mat_view
-
-def projection():
-    global altura, largura, fov
-    
-    near = 0.1
-    far = 1000
-    
-    mat_projection = glm.perspective(glm.radians(fov), largura/altura, near, far)
-    
-    return mat_projection
+    PLAYER.zoom(yoffset)
 
 
 main()

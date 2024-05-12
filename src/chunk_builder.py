@@ -10,16 +10,21 @@ class ChunkBuilder:
         self.setupMesh(world, position)
         self.atlas = atlas
 
+    def freeMemory(self):
+        self.vertices = None
+        return (self.VAO, self.VBO)
+
+
     def setupMesh(self, world, position):
 
-        x_offset = position[0]*32
-        z_offset = position[1]*32
+        x_offset = position[0]*16
+        z_offset = position[1]*16
 
-        vertices = []
+        self.vertices = []
 
-        for i in range(32):
-            for j in range(256):
-                for k in range(32):
+        for i in range(16):
+            for j in range(128):
+                for k in range(16):
                     
                     current = world.get_block((i+x_offset,j,k+z_offset))
                     
@@ -40,12 +45,10 @@ class ChunkBuilder:
                             info = (j<<(32-19))|info
                             info = (k<<(32-24))|info
                             
-                            vertices.append(info)
+                            self.vertices.append(info)
 
 
-        vertices = np.array(vertices, dtype=np.uint32)
-
-        self.num_vertices = len(vertices)
+        self.vertices = np.array(self.vertices, dtype=np.uint32)
 
         self.VAO = glGenVertexArrays(1)
         self.VBO = glGenBuffers(1)
@@ -53,7 +56,7 @@ class ChunkBuilder:
         glBindVertexArray(self.VAO)
         
         glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
-        glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
+        glBufferData(GL_ARRAY_BUFFER, self.vertices.nbytes, self.vertices, GL_STATIC_DRAW)
         
         #vertex info
         glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, STRIDE, OFFSET_POSITION)
@@ -65,7 +68,7 @@ class ChunkBuilder:
 
         glBindVertexArray(self.VAO)
         glBindTexture(GL_TEXTURE_2D, self.atlas)
-        glDrawArrays(GL_TRIANGLES, 0, self.num_vertices)
+        glDrawArrays(GL_TRIANGLES, 0, self.vertices.shape[0])
         glBindTexture(GL_TEXTURE_2D, 0)
         glBindVertexArray(0)
 
