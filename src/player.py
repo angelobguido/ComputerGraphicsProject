@@ -2,6 +2,7 @@ import glm
 from terrain.world import World
 from utils.player_directions import *
 from utils.block_types import *
+import numpy as np
 
 INITIAL_POSITION = glm.vec3(0.0,100,0)
 INITIAL_PLAYER_FRONT = glm.vec3(0.0, 0.0, -1.0)
@@ -38,8 +39,8 @@ class Player:
         if self.actionTimer < 0:
             self.actionTimer = PLAYER_ACTION_DELAY
 
-            for i in range(PLAYER_RANGE):
-                direction = self.position + self.front*(i+1)
+            for i in np.arange(0.5,PLAYER_RANGE, 0.25):
+                direction = self.position + self.front*i
                 x = int(direction.x)
                 y = int(direction.y)
                 z = int(direction.z)

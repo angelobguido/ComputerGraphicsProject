@@ -4,14 +4,36 @@ from noise.perlin import SimplexNoise
 from perlin_noise import PerlinNoise
 import random
 from block_arranges import *
+import pickle
+
 
 class World:
 
-    def __init__(self, seed = 0):
+    def __init__(self, seed = 0, load = False):
+
         self.noise = PerlinNoise(octaves=0.2,seed=seed)
         self.noiseValues = {}
         self.blocks = {}
+        self.seed = seed
         random.seed(seed)
+
+        if load:
+            self.load()
+
+    def save(self):
+        f = open("save.pkl","wb")
+
+        pickle.dump(self.blocks,f)
+
+        f.close()
+
+
+    def load(self):
+        f = open("save.pkl","rb")
+
+        self.blocks = pickle.load(f)
+
+        f.close()
 
     def get_block(self,position):
         x,y,z = position

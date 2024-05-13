@@ -21,7 +21,9 @@ from utils.player_directions import *
 HEIGHT = 600
 WIDTH = 800
 
-WORLD = World(50)
+LOAD = True
+
+WORLD = World(50, LOAD)
 PLAYER = Player(WIDTH, HEIGHT, WORLD)
 CHUNK_MANAGER = None
 
@@ -40,7 +42,7 @@ def main():
 
     glfw.init()
     glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
-    window = glfw.create_window(WIDTH, HEIGHT, "Câmeras - Matriz Projection", None, None)
+    window = glfw.create_window(WIDTH, HEIGHT, "Minecraft 2", None, None)
     glfw.set_input_mode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
 
 
@@ -55,6 +57,7 @@ def main():
     skyMesh = Mesh(WaveFrontReader("./models/sky/sky.obj").vertices, [(skyTex, 0)])
     sky = Model(skyMesh, scale=glm.vec3(2,2,2))
     sky2 = Model(skyMesh, scale=glm.vec3(2,-2,2))
+    monstro = Model(Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(TextureReader("./models/monstro/monstro.jpg").textureID, 0)]), position=(0,75,0), scale=(3,3,3))
 
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
     block_shader = Shader("./shaders/block_vertex_shader.hlsl", "./shaders/block_fragment_shader.hlsl")
@@ -110,8 +113,12 @@ def main():
         
         glClear(GL_DEPTH_BUFFER_BIT)
 
-        block_shader.use()
         mat_view = PLAYER.getView()
+        shader.setMat4("view", mat_view)
+        
+        monstro.draw(shader)
+
+        block_shader.use()
         block_shader.setMat4("view", mat_view)
         block_shader.setMat4("projection", mat_projection)        
         
@@ -149,6 +156,7 @@ def key_event(window, key, scancode, action, mods):
         key_states[key] = False
 
     if key_states.get(glfw.KEY_ESCAPE, False):
+        WORLD.save()
         glfw.set_window_should_close(window, True)
 
     if key_states.get(glfw.KEY_W, False):
