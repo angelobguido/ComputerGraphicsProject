@@ -1,3 +1,5 @@
+#Integrantes: Angelo Antonio Bertoli Guido 12547677
+
 import glfw
 from OpenGL.GL import *
 from shader import Shader
