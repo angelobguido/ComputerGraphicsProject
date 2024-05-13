@@ -2,6 +2,8 @@ import numpy as np
 from utils.block_types import *
 from noise.perlin import SimplexNoise
 from perlin_noise import PerlinNoise
+import random
+from block_arranges import *
 
 class World:
 
@@ -9,6 +11,7 @@ class World:
         self.noise = PerlinNoise(octaves=0.2,seed=seed)
         self.noiseValues = {}
         self.blocks = {}
+        random.seed(seed)
 
     def get_block(self,position):
         x,y,z = position
@@ -31,6 +34,9 @@ class World:
 
         if y == noiseValue:
             self.blocks[(x,y,z)] = GRASS
+            if random.random() > 0.999:
+                self.growTree((x,y,z))
+
         elif y < noiseValue and y > noiseValue - 10:
             self.blocks[(x,y,z)] = DIRT
         elif y <= noiseValue - 10:
@@ -40,3 +46,16 @@ class World:
 
         return self.blocks[(x,y,z)]
 
+    def breakBlock(self, position):
+        self.blocks[position] = NONE
+
+    def placeBlock(self, position):
+        self.blocks[position] = BRICK
+
+    def growTree(self, position):
+        
+        for y in range(tree_arrange.shape[0]):
+            for z in range(tree_arrange.shape[1]):
+                for x in range(tree_arrange.shape[2]):
+                    if tree_arrange[y,z,x] != NONE:
+                        self.blocks[(position[0] + x -1, position[1] + tree_arrange.shape[0] - y, position[2] + z -1)] = tree_arrange[y,z,x]

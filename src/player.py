@@ -10,6 +10,9 @@ SPEED = 200
 SENSITIVITY = 0.1
 INITIAL_FOV=45
 
+PLAYER_RANGE = 3
+PLAYER_ACTION_DELAY = 0.5
+
 NEAR = 0.1
 FAR = 1000
 
@@ -28,6 +31,37 @@ class Player:
         self.height = height
         self.world = world
         self.lastPosition = glm.vec3(INITIAL_POSITION)
+        self.actionTimer = PLAYER_ACTION_DELAY
+
+    def getBlock(self):
+
+        if self.actionTimer < 0:
+            self.actionTimer = PLAYER_ACTION_DELAY
+
+            for i in range(PLAYER_RANGE):
+                direction = self.position + self.front*(i+1)
+                x = int(direction.x)
+                y = int(direction.y)
+                z = int(direction.z)
+                    
+                if self.world.get_block((x,y,z)) != NONE:
+                    
+                    face = (1,0,0)
+                    max_dot = 0
+                    for vector in [(1,0,0), (-1,0,0), (0,1,0), (0,-1,0), (0,0,1), (0,0,-1)]:
+                        dot = glm.dot(vector, -self.front)
+                        if max_dot < dot:
+                            max_dot = dot
+                            face = vector
+
+                    return [(x,y,z), (x+face[0],y+face[1],z+face[2])]
+                
+            return []
+                    
+    def update(self, deltaTime):
+
+        if self.actionTimer > 0:
+            self.actionTimer = self.actionTimer - deltaTime
 
     def move(self, deltaTime, direction):
 
@@ -50,7 +84,8 @@ class Player:
         if direction == DOWN:
             self.position -= glm.normalize(glm.vec3(0.0,1.0,0.0)) * displacement
 
-        ranges = [(0.5,0,0),(-0.5,0,0),(0,0.5,0),(0,-0.5,0),(0,0,0.5),(0,0,-0.5)]
+        #ranges = [(0.5,0,0),(-0.5,0,0),(0,0.5,0),(0,-0.5,0),(0,0,0.5),(0,0,-0.5)]
+        ranges = [(0,0,0)]
         for range in ranges:
             self.detectCollision(range)
 

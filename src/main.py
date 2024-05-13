@@ -23,6 +23,8 @@ WIDTH = 800
 
 WORLD = World(50)
 PLAYER = Player(WIDTH, HEIGHT, WORLD)
+CHUNK_MANAGER = None
+
     
 deltaTime = 0.0
 lastFrame = 0.0
@@ -34,7 +36,7 @@ key_states = {}
 polygon_mode = False
 
 def main():
-    global deltaTime, lastFrame, window
+    global deltaTime, lastFrame, window, CHUNK_MANAGER
 
     glfw.init()
     glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
@@ -45,6 +47,7 @@ def main():
     glfw.make_context_current(window)
     glfw.set_framebuffer_size_callback(window, framebuffer_size_callback)
     glfw.set_key_callback(window, key_event)
+    glfw.set_mouse_button_callback(window, mouse_button_event)
     glfw.set_cursor_pos_callback(window, mouse_callback)
     glfw.set_scroll_callback(window, scroll_callback)
 
@@ -68,12 +71,11 @@ def main():
         "./textures/atlas4.png"
     ]).textureID
 
-    chunk_manager = ChunkManager(WORLD, PLAYER, atlas)
-
+    CHUNK_MANAGER = ChunkManager(WORLD, PLAYER, atlas)
 
     glfw.show_window(window)
 
-    glEnable(GL_DEPTH_TEST) ### importante para 3D
+    glEnable(GL_DEPTH_TEST) ###w importante para 3D
     glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
     glEnable( GL_BLEND )
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA )
@@ -89,6 +91,8 @@ def main():
         currentFrame = glfw.get_time()
         deltaTime = currentFrame - lastFrame
         lastFrame = currentFrame
+
+        PLAYER.update(deltaTime)
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         
@@ -111,7 +115,7 @@ def main():
         block_shader.setMat4("view", mat_view)
         block_shader.setMat4("projection", mat_projection)        
         
-        chunk_manager.draw(block_shader)
+        CHUNK_MANAGER.draw(block_shader)
 
         glfw.swap_buffers(window)
 
@@ -121,6 +125,21 @@ def framebuffer_size_callback(window, width: int, height: int):
     glViewport(0, 0, width, height)
     PLAYER.updateDimensions(width,height)
     
+def mouse_button_event(window, key, scancode, action):
+    if key == glfw.MOUSE_BUTTON_LEFT:
+        positionArray = PLAYER.getBlock()
+        if positionArray:
+            position = positionArray[0]
+            WORLD.breakBlock(position)
+            CHUNK_MANAGER.breakBlock(position)
+
+    if key == glfw.MOUSE_BUTTON_RIGHT:
+        positionArray = PLAYER.getBlock()
+        if positionArray:
+            position = positionArray[1]
+            WORLD.placeBlock(position)
+            CHUNK_MANAGER.placeBlock(position)
+
 def key_event(window, key, scancode, action, mods):
     global fullscreen, key_states, polygon_mode
 
