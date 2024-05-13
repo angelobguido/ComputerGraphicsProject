@@ -17,7 +17,7 @@ house_arrange = np.array([
         [
             
             [BRICK, BRICK, BRICK, BRICK, BRICK, BRICK, BRICK],
-            [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
+            [BRICK, DIAMOND, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
@@ -29,11 +29,11 @@ house_arrange = np.array([
         ],
         [
             [BRICK, BRICK, BRICK, BRICK, BRICK, BRICK, BRICK],
+            [BRICK, DIAMOND, FURNACE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
-            [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
-            [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
+            [BRICK, LEAVES, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
@@ -41,11 +41,11 @@ house_arrange = np.array([
         ],
         [
             [BRICK, BRICK, BRICK, BRICK, BRICK, BRICK, BRICK],
+            [BRICK, DIAMOND, FURNACE, FURNACE, TABLE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
-            [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
-            [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
+            [BRICK, LOG, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],
             [BRICK, NONE, NONE, NONE, NONE, NONE, GLASS],

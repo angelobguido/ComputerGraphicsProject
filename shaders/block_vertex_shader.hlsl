@@ -73,7 +73,7 @@ void main(){
 
     vec3 position = vec3(position_x,position_y,position_z);
 
-    TexCoord = vertex_texture_position[vertex] + vec2((texture_index%width)*16/float(width), (texture_index/width)*16/float(height));
+    TexCoord = vertex_texture_position[vertex] + vec2(int(texture_index%16)*(16.0/float(width)), -int(texture_index/16)*(16.0/float(height)));
     Normal = normals[face];
 
     gl_Position = projection * view * model * vec4(position,1.0);

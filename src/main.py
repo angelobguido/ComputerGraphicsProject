@@ -21,7 +21,7 @@ from utils.player_directions import *
 HEIGHT = 600
 WIDTH = 800
 
-LOAD = True
+LOAD = False
 
 WORLD = World(50, LOAD)
 PLAYER = Player(WIDTH, HEIGHT, WORLD)
@@ -37,8 +37,10 @@ key_states = {}
 
 polygon_mode = False
 
+inc = 0
+
 def main():
-    global deltaTime, lastFrame, window, CHUNK_MANAGER
+    global deltaTime, lastFrame, window, CHUNK_MANAGER, inc
 
     glfw.init()
     glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
@@ -57,7 +59,9 @@ def main():
     skyMesh = Mesh(WaveFrontReader("./models/sky/sky.obj").vertices, [(skyTex, 0)])
     sky = Model(skyMesh, scale=glm.vec3(2,2,2))
     sky2 = Model(skyMesh, scale=glm.vec3(2,-2,2))
-    monstro = Model(Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(TextureReader("./models/monstro/monstro.jpg").textureID, 0)]), position=(0,75,0), scale=(3,3,3))
+    monstro = Model(Mesh(WaveFrontReader("./models/monstro/monstro.obj").vertices, [(TextureReader("./models/monstro/monstro.jpg").textureID, 0)]), position=glm.vec3(0,75,0), scale=glm.vec3(3,3,3))
+    casa = Model(Mesh(WaveFrontReader("./models/casa/casa.obj").vertices, [(TextureReader("./models/casa/casa.jpg").textureID, 0)]), position=glm.vec3(0,65,30), scale=glm.vec3(1,1,1))
+
 
     shader = Shader("./shaders/vertex_shader.hlsl", "./shaders/fragment_shader.hlsl")
     block_shader = Shader("./shaders/block_vertex_shader.hlsl", "./shaders/block_fragment_shader.hlsl")
@@ -90,6 +94,20 @@ def main():
     while not glfw.window_should_close(window):
 
         glfw.poll_events() 
+
+        CHUNK_MANAGER.chunks[(2,1)].rotation_z = inc
+        CHUNK_MANAGER.chunks[(1,1)].rotation_x = inc*0.5
+        CHUNK_MANAGER.chunks[(0,0)].rotation_y = inc*2
+        CHUNK_MANAGER.chunks[(0,0)].rotation_x = inc*2
+        CHUNK_MANAGER.chunks[(0,0)].rotation_z = inc*2
+        CHUNK_MANAGER.chunks[(-1,0)].position.y = inc*0.7
+        
+        monstro.position = glm.vec3(0+inc*1.5,75,0+inc*inc)
+        monstro.scale = glm.vec3(inc*10,inc*20,inc*5)
+        casa.position.x = inc*2
+        casa.position.z = -inc*inc*inc*3 + 30
+        casa.position.y = 65 - inc
+        
         
         currentFrame = glfw.get_time()
         deltaTime = currentFrame - lastFrame
@@ -117,6 +135,7 @@ def main():
         shader.setMat4("view", mat_view)
         
         monstro.draw(shader)
+        casa.draw(shader)
 
         block_shader.use()
         block_shader.setMat4("view", mat_view)
@@ -148,7 +167,7 @@ def mouse_button_event(window, key, scancode, action):
             CHUNK_MANAGER.placeBlock(position)
 
 def key_event(window, key, scancode, action, mods):
-    global fullscreen, key_states, polygon_mode
+    global fullscreen, key_states, polygon_mode, inc
 
     if action == glfw.PRESS:
         key_states[key] = True
@@ -179,6 +198,12 @@ def key_event(window, key, scancode, action, mods):
         else:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
             polygon_mode = False
+        
+    if key == glfw.KEY_R:
+        inc += 0.1
+    if key == glfw.KEY_T:
+        inc -= 0.1
+
         
 
     if key == glfw.KEY_F and action == glfw.PRESS:

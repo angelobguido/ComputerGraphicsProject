@@ -56,8 +56,12 @@ class World:
 
         if y == noiseValue:
             self.blocks[(x,y,z)] = GRASS
+            
+            if (x,z) in [(2,2), (40,40), (-20,-20)]:
+                self.placeStructure((x,y,x), house_arrange)
+
             if random.random() > 0.999:
-                self.growTree((x,y,z))
+                self.placeStructure((x,y+1,z), tree_arrange, (1,1))
 
         elif y < noiseValue and y > noiseValue - 10:
             self.blocks[(x,y,z)] = DIRT
@@ -74,10 +78,10 @@ class World:
     def placeBlock(self, position):
         self.blocks[position] = BRICK
 
-    def growTree(self, position):
+    def placeStructure(self, position, block_arrange, pivot = (0,0)):
         
-        for y in range(tree_arrange.shape[0]):
-            for z in range(tree_arrange.shape[1]):
-                for x in range(tree_arrange.shape[2]):
-                    if tree_arrange[y,z,x] != NONE:
-                        self.blocks[(position[0] + x -1, position[1] + tree_arrange.shape[0] - y, position[2] + z -1)] = tree_arrange[y,z,x]
+        for y in range(block_arrange.shape[0]):
+            for z in range(block_arrange.shape[1]):
+                for x in range(block_arrange.shape[2]):
+                    if block_arrange[y,z,x] != NONE:
+                        self.blocks[(position[0] + x - pivot[0], position[1] + block_arrange.shape[0] - y - 1, position[2] + z -pivot[1])] = block_arrange[y,z,x]

@@ -7,27 +7,38 @@ LOG = 5
 GRASS = 6
 GLASS = 7
 DIRT = 8
+DIAMOND = 9
+FURNACE = 10
+TABLE = 11
+
 
 
 def get_textures(type):
     if type == NONE:
         return []
     elif type == PLANK: 
-        return [4,4,4,4,4,4]
+        return [8,8,8,8,8,8]
     elif type == BRICK:
-        return [6,6,6,6,6,6]
+        return [11,11,11,11,11,11]
     elif type == COBBLE:
-        return [0,0,0,0,0,0]
+        return [2,2,2,2,2,2]
     elif type == LEAVES:
-        return [1,1,1,1,1,1]
-    elif type == LOG:
-        return [7,7,2,2,2,2]
-    elif type == GRASS:
-        return [8,3,5,5,5,5]
-    elif type == GLASS:
-        return [9,9,9,9,9,9]
-    elif type == DIRT:
         return [3,3,3,3,3,3]
+    elif type == LOG:
+        return [14,14,4,4,4,4]
+    elif type == GRASS:
+        return [15,5,10,10,10,10]
+    elif type == GLASS:
+        return [16,16,16,16,16,16]
+    elif type == DIRT:
+        return [5,5,5,5,5,5]
+    elif type == DIAMOND:
+        return [6,6,6,6,6,6]
+    elif type == FURNACE:
+        return [7,7,9,12,12,12]
+    elif type == TABLE:
+        return [0,0,13,1,1,1]
     
+
 def is_transparent(type):
     return type in [GLASS, LEAVES, NONE]
